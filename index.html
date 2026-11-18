@@ -1,34 +1,1290 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Job Application Tracker</title>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Application Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Ikon tab (emoji kecil). Baris lama memakai href="-" sehingga browser mencari file bernama "-" yang tidak ada. -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
+<!--
+=====================================================================
+  JOB APPLICATION TRACKER  -  index.html  (TAMPILAN / "WAJAH" APLIKASI)
+=====================================================================
 
-  <!--
-    HALAMAN PEMBUNGKUS UNTUK GITHUB PAGES
-    Halaman ini hanya menampilkan web app Google Apps Script (project PENONTON) di dalam sebuah bingkai
-    layar penuh, supaya alamat yang dibagikan pendek (alamat github.io milikmu).
+APA ITU FILE INI?
+  Ini adalah semua yang kamu LIHAT di layar: warna, tombol, tabel, grafik, dan
+  form. Data lamaranmu sendiri disimpan dan diolah oleh file Code.gs
+  (otomatis berbicara dengan Google Spreadsheet).
 
-    SYARAT AGAR TAMPIL: di Code.gs project penonton, doGet() harus memakai
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    lalu deploy versi baru. Tanpa itu, bingkai kosong dengan tulisan "script.google.com refused to connect".
+FILE INI TERDIRI DARI 3 BAGIAN (cari tulisannya dengan Ctrl+F):
+  [A] STYLE   -> tag "style": mengatur WARNA, UKURAN, dan POSISI
+  [B] HTML    -> tag "body": kerangka halaman (judul, tombol, tabel kosong, form)
+  [C] SCRIPT  -> tag "script": otak yang mengisi tabel, menghitung angka, dan
+                 mengatur klik tombol
 
-    MAU MENGGANTI ALAMAT WEB APP?  Ubah alamat pada atribut src di bawah (harus berakhiran /exec).
-  -->
-  <style>
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #f2f4f1; overflow: hidden; }
-    iframe { display: block; width: 100%; height: 100dvh; border: 0; }   /* dvh = tinggi layar yang benar di browser HP */
-  </style>
+MAU MENGUBAH APA?  (resep cepat)
+  - Ganti WARNA UTAMA (tombol, batang grafik)  -> [A] bagian "1. WARNA", baris brand
+  - Ganti WARNA status (biru, kuning, hijau, merah) -> [A] bagian "1. WARNA"
+  - Ganti judul halaman                         -> [B] cari "Job Application Tracker"
+                                                   (judul tab browser ada di Code.gs, setTitle)
+  - Ganti tulisan tombol / judul kartu          -> [B] cari tulisan yang mau diganti
+  - Ganti lebar kolom tabel utama               -> [A] bagian "7. TABEL", cari ".mt th:nth-child"
+  - Ganti jumlah baris tabel per halaman        -> [C] bagian "1. PENGATURAN", baris PER
+  - Ganti jumlah bulan di grafik "All years"    -> [C] bagian "1. PENGATURAN", baris CHART_MAX_MONTHS
+  - Ganti warna irisan pie chart                -> [C] bagian "1. PENGATURAN", baris PIE_COLORS
+  - Tambah pilihan Type / Portal / Progress     -> BUKAN di sini, ubah "OPTIONS" di Code.gs
+  - Ubah aturan otomatis (1 bulan / 14 hari)    -> BUKAN di sini, ubah di Code.gs
+                                                   (angkanya otomatis terbawa ke tampilan ini)
+  - Membuat versi HANYA-LIHAT untuk orang lain  -> [C] bagian "1. PENGATURAN", baris READ_ONLY
+                                                   (ubah menjadi true, HANYA di project khusus penonton)
+  - Memasang di GitHub Pages (tanpa iframe)     -> READ_ONLY = true dan isi API_URL (bagian "1. PENGATURAN")
+
+ATURAN EMAS SAAT MENGEDIT:
+  1. Simpan salinan (backup) file sebelum mengubah.
+  2. Jangan mengubah nama "id" (misalnya id="rows") dan nama fungsi, karena
+     bagian SCRIPT mencarinya lewat nama itu.
+  3. Ubah sedikit-sedikit, lalu tes. Setelah selesai: Deploy > Manage deployments >
+     Edit > New version > Deploy, supaya perubahan terlihat di aplikasi.
+  4. Kalau layar jadi kosong/putih, buka Console browser (tekan F12) untuk
+     melihat pesan error-nya.
+
+ISTILAH:
+  - class="nama"  = label gaya. Di bagian STYLE ditulis ".nama".
+  - id="nama"     = nama unik sebuah elemen. Di bagian STYLE ditulis "#nama".
+  - px            = satuan ukuran (piksel). Semakin besar angkanya, semakin besar tampilannya.
+=====================================================================
+-->
+
+<style>
+/* =====================================================================
+   [A] STYLE
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. WARNA
+   Semua warna ada di sini. Ubah nilai setelah tanda titik dua, misalnya
+   --brand: #0f766e  ->  --brand: #2563eb  (warna utama jadi biru).
+   Ada dua set: mode terang (atas) dan mode gelap (di bawahnya, otomatis
+   dipakai kalau HP/komputer kamu memakai tema gelap).
+   --------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f2f4f1;           /* latar halaman */
+  --surface: #ffffff;      /* latar kartu, tabel, dan form */
+  --ink: #16213a;          /* teks utama */
+  --muted: #677087;        /* teks abu-abu (keterangan kecil) */
+  --line: #dfe3e8;         /* garis tipis pemisah */
+  --brand: #0f766e;        /* WARNA UTAMA: tombol, batang grafik, cincin fokus */
+  --brand-ink: #ffffff;    /* warna tulisan di atas warna utama */
+  --danger: #b42318;       /* warna merah (tombol hapus) */
+  --ring: rgba(15, 118, 110, .22);  /* cincin tipis saat kolom diklik */
+
+  /* panah kecil pada dropdown (gambar kecil; warna garis ada di %23677087) */
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23677087' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  /* warna status lamaran: "-bg" = warna latar, tanpa "-bg" = warna tulisan/garis */
+  --wait-bg: #e8eefc;  --wait: #2b4ea2;    /* Submitted (menunggu)        - biru   */
+  --proc-bg: #fff1d6;  --proc: #8a5300;    /* Assessment s/d Presentation - kuning */
+  --offer-bg: #d9f5e3; --offer: #14683a;   /* Offering                    - hijau  */
+  --decl-bg: #fde4e1;  --decl: #9f2a1d;    /* Rejected / Not Proceed      - merah  */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10151f;
+    --surface: #171e2b;
+    --ink: #e8ecf4;
+    --muted: #93a0b8;
+    --line: #273044;
+    --brand: #2dd4bf;
+    --brand-ink: #08201d;
+    --danger: #ff8b7e;
+    --ring: rgba(45, 212, 191, .28);
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393a0b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --wait-bg: #1d2a4d;  --wait: #a8c0ff;
+    --proc-bg: #4a3510;  --proc: #ffd37a;
+    --offer-bg: #12392a; --offer: #7be3a6;
+    --decl-bg: #4a1f1a;  --decl: #ffaba1;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   2. DASAR HALAMAN  (font, judul, ukuran halaman)
+   --------------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;  /* ganti font di sini */
+  font-size: 14px;                                           /* ukuran teks dasar */
+  line-height: 1.5;
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }  /* lebar maksimal isi halaman */
+
+header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+}
+h1 { font-size: clamp(28px, 5vw, 36px); font-weight: 800; letter-spacing: -.02em; margin: 0; }
+.sub { color: var(--muted); margin: 2px 0 0; }
+#year { font-size: 17px; font-weight: 700; }     /* tulisan "Year 2026 · 11 applications recorded" */
+
+.hdr-actions { display: flex; gap: 10px; align-items: center; }   /* pilihan tahun + tombol Add */
+
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }  /* garis fokus saat memakai keyboard */
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }  /* teks khusus pembaca layar (tidak terlihat) */
+
+/* ---------------------------------------------------------------------
+   3. TOMBOL
+   --------------------------------------------------------------------- */
+button { font: inherit; cursor: pointer; }
+
+/* tombol utama berwarna (Add application, Save) */
+.btn { background: var(--brand); color: var(--brand-ink); border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 700; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }   /* versi polos (Cancel) */
+
+/* tombol berbingkai tebal bulat (More info, Back to dashboard, Previous, Next) */
+.more { margin-top: 14px; background: transparent; border: 2px solid var(--line); color: var(--ink); border-radius: 999px; padding: 6px 16px; font-weight: 700; font-size: 13px; }
+.more:hover { border-color: var(--brand); color: var(--brand); }
+.more:disabled { opacity: .4; cursor: default; }
+.more:disabled:hover { border-color: var(--line); color: var(--ink); }
+.hdr-actions .more { margin-top: 0; }
+
+/* label "Showing: Waiting x" di atas tabel (klik untuk menghapus filter) */
+.chip {
+  display: none; align-items: center; gap: 6px;
+  border: 2px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 6px 12px 6px 14px; font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.chip:hover { border-color: var(--brand); color: var(--brand); }
+.chip svg { width: 14px; height: 14px; }
+
+/* tombol ikon pensil (edit) dan tong sampah (hapus) di tabel */
+.ib { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); border-radius: 8px; padding: 0; }
+.ib:hover { background: var(--bg); color: var(--ink); }
+.ib.del:hover { color: var(--danger); }
+.ib svg { width: 17px; height: 17px; }
+
+/* ---------------------------------------------------------------------
+   4. KOLOM ISIAN & DROPDOWN
+   --------------------------------------------------------------------- */
+input, select, textarea {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%;
+  transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+input, textarea { min-height: 40px; }
+
+/* dropdown: panah kustom (--chev) menggantikan panah bawaan browser */
+select {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  min-height: 40px; font-weight: 600; padding-right: 38px;
+  background-image: var(--chev); background-repeat: no-repeat; background-position: right 13px center; background-size: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+}
+select option { background: var(--surface); color: var(--ink); font-weight: 500; }
+
+select:hover:not(:disabled), input:hover:not(:disabled), textarea:hover { border-color: var(--muted); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--ring); }
+
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 0 5px; }
+
+.hdr-actions select { width: auto; min-width: 118px; font-weight: 700; }   /* pilihan tahun */
+
+/* baris pencarian + filter di atas tabel */
+.tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.tools input { flex: 1; min-width: 200px; width: auto; }
+.tools select { width: auto; min-width: 170px; }
+.tools select:disabled { opacity: .55; cursor: not-allowed; }
+#tableTop { scroll-margin-top: 16px; }   /* jarak saat halaman otomatis bergulir ke tabel */
+
+/* ---------------------------------------------------------------------
+   5. BADGE STATUS  (label berwarna: Submitted, Assessment, dst.)
+   Di tabel, badge berbentuk dropdown (select.badge) supaya status bisa diganti cepat.
+   --------------------------------------------------------------------- */
+.badge { display: inline-block; border: 0; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; appearance: none; -webkit-appearance: none; width: auto; cursor: pointer; }
+.badge.wait  { background: var(--wait-bg);  color: var(--wait); }
+.badge.proc  { background: var(--proc-bg);  color: var(--proc); }
+.badge.offer { background: var(--offer-bg); color: var(--offer); }
+.badge.decl  { background: var(--decl-bg);  color: var(--decl); }
+
+select.badge { width: 92px; min-width: 0; min-height: 0; padding: 4px 5px; font-size: 11.5px; text-align: center; text-align-last: center; box-shadow: none; }
+select.badge:hover:not(:disabled) { filter: brightness(.96); }   /* lebar dropdown status: ubah "92px" */
+
+/* ---------------------------------------------------------------------
+   6. KARTU DASHBOARD  (Processed, Summary, grafik batang)
+   --------------------------------------------------------------------- */
+.pipe { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 18px 14px; margin-bottom: 18px; }
+.pipe h2, .panel h2 { font-size: 17px; font-weight: 700; color: var(--muted); margin: 0 0 14px; }   /* judul kartu */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.cap { color: var(--muted); font-size: 13px; margin: -8px 0 12px; }   /* keterangan kecil di bawah judul kartu */
+
+/* deretan kotak angka (Submitted 3 | Assessment 1 | ...) */
+.stages { display: grid; grid-template-columns: repeat(9, minmax(86px, 1fr)); gap: 0; overflow-x: auto; }
+.stage { padding: 8px 10px 6px; border-left: 1px solid var(--line); min-width: 86px; }
+.stage:first-child { border-left: 0; padding-left: 0; }
+.stage b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }   /* angkanya */
+.stage span { font-size: 12px; font-weight: 400; color: var(--muted); }                                       /* nama tahapnya */
+.stage:not(.zero) span { font-weight: 700; }     /* tulisan menebal bila angkanya 1 atau lebih */
+.stage.zero b { color: var(--line); }            /* angka 0 dibuat pudar */
+.stage .bar { height: 4px; border-radius: 2px; margin-top: 8px; background: var(--line); }   /* garis warna di bawah angka */
+.stage.wait .bar.on  { background: var(--wait); }
+.stage.proc .bar.on  { background: var(--proc); }
+.stage.offer .bar.on { background: var(--offer); }
+.stage.decl .bar.on  { background: var(--decl); }
+.stage.tot .bar.on   { background: var(--brand); }
+
+/* kotak kecil yang bisa diklik (Waiting / On process / Declined / Offering) */
+.stage.mini b { font-size: 22px; }
+button.stage { background: none; border-top: 0; border-right: 0; border-bottom: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; border-radius: 0; }
+button.stage.mini:hover { background: rgba(127, 127, 127, .07); }
+button.stage.mini[aria-pressed="true"] { background: rgba(127, 127, 127, .11); }   /* kotak yang sedang aktif */
+button.stage.mini[aria-pressed="true"] span { color: var(--ink); }
+
+/* angka besar "Total apply" */
+.stage.tot { padding-right: 0; }
+.stage.tot b { font-size: 56px; letter-spacing: -.04em; line-height: 1; }
+.stage.tot span { display: block; font-size: 15px; margin-top: 6px; }
+.stage.tot .bar { height: 6px; margin-top: 12px; }
+
+/* kolom kiri dashboard: kartu Summary di atas, empat kartu kecil di bawahnya */
+.col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.col .pipe, .col .summary { margin-bottom: 0; }
+.col .pipe { flex: 1; display: flex; flex-direction: column; }
+.col .stages { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.col #sumTop { grid-template-columns: 1fr; }
+.col .pipe #sumTop { margin-bottom: 12px; }
+.sumrow { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+.col .sumrow { margin-top: auto; }
+
+/* deretan kartu ringkasan (Avg per month, Top month, ... dan halaman On Process) */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid var(--line); border-radius: 16px; background: var(--surface); margin-bottom: 18px; }
+.summary.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }     /* empat kartu dalam satu baris */
+.sum { padding: 16px 18px; border-left: 1px solid var(--line); min-width: 0; }
+.sum:first-child { border-left: 0; }
+.sum small { color: var(--muted); font-size: 12px; display: block; }                                             /* judul kartu */
+.sum b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }          /* angka/nilai besar */
+.sum em { display: block; font-style: normal; color: var(--muted); font-size: 12px; margin-top: 2px; }           /* keterangan kecil */
+.sum .sm { white-space: normal; }
+.k4 .sum { padding: 14px 12px; }
+.k4 .sum small, .k4 .sum em { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* teks panjang dipotong "..." */
+
+/* tata letak kartu */
+.grid  { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 26px; }                           /* dua kartu sejajar */
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; margin-bottom: 26px; }        /* kiri sedikit lebih lebar */
+
+/* grafik batang horizontal (Job type, Portal, Applications per month, Count per stage) */
+.row { display: grid; grid-template-columns: 118px 1fr 26px; gap: 10px; align-items: center; margin: 7px 0; font-size: 13px; }   /* 118px = lebar kolom nama */
+.track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }     /* jalur abu-abu */
+.fill { height: 100%; background: var(--brand); border-radius: 4px; transition: width .4s; }   /* batang berwarna */
+.row i { font-style: normal; text-align: right; font-weight: 700; }                      /* angka di ujung kanan */
+
+/* ---------------------------------------------------------------------
+   7. TABEL  (tabel utama "mt" dan tabel On Process "op-t")
+   --------------------------------------------------------------------- */
+.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; }
+.tablebox.fit { overflow: hidden; }   /* tabel utama: tanpa penggeser samping */
+
+table { border-collapse: collapse; width: 100%; min-width: 860px; }
+th { text-align: left; font-size: 13px; color: var(--ink); font-weight: 700; padding: 13px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: rgba(127, 127, 127, .07); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; text-align: left; }
+tbody tr:hover td { background: rgba(127, 127, 127, .05); }
+tr:last-child td { border-bottom: 0; }
+td.co  { font-weight: 700; }                         /* kolom Company dibuat tebal */
+td.pos { max-width: 300px; }
+td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu-abu */
+
+.empty { padding: 40px; text-align: center; color: var(--muted); }   /* pesan "No applications yet" */
+
+/* kolom yang rata tengah: No (1) dan Type, Portal, Date, Progress (4-7) - hanya di layar lebar */
+@media (min-width: 861px) {
+  .cc th:nth-child(1), .cc td:nth-child(1),
+  .cc th:nth-child(n+4):nth-child(-n+7), .cc td:nth-child(n+4):nth-child(-n+7) { text-align: center; }
+}
+
+/* tabel utama (class "mt"): lebar tiap kolom dalam persen, total = 100%
+   urutan kolom: 1 No | 2 Company | 3 Position | 4 Type | 5 Portal | 6 Date | 7 Progress | 8 Notes | 9 ikon edit/hapus */
+.mt { table-layout: fixed; width: 100%; min-width: 0; }
+.mt th, .mt td { padding-left: 10px; padding-right: 10px; }
+.mt th:nth-child(1) { width: 4%; }    .mt th:nth-child(2) { width: 15%; }  .mt th:nth-child(3) { width: 19%; }
+.mt th:nth-child(4) { width: 8.5%; }  .mt th:nth-child(5) { width: 9.5%; } .mt th:nth-child(6) { width: 11%; }
+.mt th:nth-child(7) { width: 11%; }   .mt th:nth-child(8) { width: 15%; }  .mt th:nth-child(9) { width: 7%; }
+.mt th:nth-child(1), .mt td:nth-child(1) { padding-left: 6px; padding-right: 6px; }
+.mt th:nth-child(9), .mt td:nth-child(9) { padding-left: 4px; padding-right: 4px; }
+.act { white-space: nowrap; }
+
+/* tabel On Process (class "op-t"): kolom 8-9 (Days in stage, Process in days) rata tengah */
+.op-t th, .op-t td { padding-left: 8px; padding-right: 8px; }
+.op-t th:nth-child(n+8), .op-t td:nth-child(n+8) { text-align: center; }
+
+/* tombol panah urutan tanggal di judul kolom Date */
+.sortbox { display: inline-flex; align-items: center; gap: 0; vertical-align: middle; }
+.sb { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 22px; margin-left: -2px; border: 0; background: none; color: var(--muted); padding: 0; border-radius: 6px; }
+.sb svg { width: 14px; height: 14px; }
+
+/* navigasi halaman di bawah tabel (Showing 1-6 of 11 ... Previous / Next) */
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--line); }
+.pager .pi { color: var(--muted); font-size: 13px; }
+.pager .btns { display: flex; gap: 8px; }
+.pager .more { margin-top: 0; }
+
+/* ---------------------------------------------------------------------
+   8. POP-UP & NOTIFIKASI  (banner kuning, form tambah/edit, toast, loading)
+   --------------------------------------------------------------------- */
+.notice { background: var(--proc-bg); color: var(--proc); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; font-weight: 600; display: none; }   /* banner "x applications were automatically moved..." */
+
+.overlay { position: fixed; inset: 0; background: rgba(10, 15, 25, .55); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 520px; max-height: 94vh; overflow: auto; padding: 24px; animation: pop .18s ease-out; }
+.modal h3 { margin: 0 0 16px; font-size: 20px; }
+@keyframes pop { from { transform: translateY(8px); opacity: 0; } }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }   /* dua kolom isian sejajar di form */
+.foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+
+.toast { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 600; display: none; z-index: 20; }   /* pesan singkat di atas layar */
+.loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--muted); z-index: 30; }   /* layar "Preparing database..." */
+
+/* ---------------------------------------------------------------------
+   9. HALAMAN ON PROCESS TRACKER  (pie chart & riwayat status)
+   --------------------------------------------------------------------- */
+.op-pie svg { width: 100%; height: auto; display: block; }
+.op-none { color: var(--muted); padding: 40px 10px; text-align: center; }
+
+/* baris riwayat yang terbuka di bawah sebuah lamaran */
+.op-t tr.jr td.jtd { text-align: left; padding: 14px 18px; background: rgba(127, 127, 127, .05); }
+.tg { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: 0; background: none; color: var(--muted); border-radius: 6px; padding: 0; margin-right: 4px; vertical-align: middle; }   /* tombol panah buka/tutup */
+.tg:hover { background: var(--bg); color: var(--ink); }
+.tg svg { width: 14px; height: 14px; transition: transform .15s; }
+.tg[aria-expanded="true"] svg { transform: rotate(90deg); }
+
+.jrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 4px; }          /* deretan langkah */
+.js { display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); min-width: 118px; }   /* satu langkah */
+.js.now { border-color: var(--brand); }               /* langkah yang sedang berjalan */
+.js.end.decl  { border-color: var(--decl); }          /* langkah akhir: Rejected / Not Proceed */
+.js.end.offer { border-color: var(--offer); }         /* langkah akhir: Offering */
+.js .badge { cursor: default; align-self: flex-start; }
+.js b { font-size: 15px; }
+.js small { color: var(--muted); font-size: 12px; }
+.jar { display: inline-flex; color: var(--muted); }   /* tanda panah antar langkah */
+.jar svg { width: 16px; height: 16px; }
+.jnote { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+
+/* ---------------------------------------------------------------------
+   10. MODE HANYA-LIHAT  (aktif hanya bila READ_ONLY = true di bagian SCRIPT)
+   Class "ro" dipasang di <body> oleh script. Pada mode normal, aturan di bawah ini tidak berlaku.
+   --------------------------------------------------------------------- */
+.vo { display: none; }                                                              /* penanda "View only" disembunyikan di mode normal */
+.ro .vo { display: inline-block; border: 2px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.ro #addBtn { display: none; }                                                      /* tombol Add application */
+.ro .mt th:nth-child(9) { display: none; }                                          /* kolom ikon edit/hapus */
+.ro .mt th:nth-child(8) { width: 22%; }                                             /* lebar kolom ikon dibagikan ke kolom Notes */
+.ro-badge { min-width: 92px; text-align: center; padding: 4px 5px; font-size: 11.5px; cursor: default; }   /* status berupa label (bukan dropdown) */
+
+/* ---------------------------------------------------------------------
+   11. LAYAR KECIL (HP / tablet)
+   --------------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .grid, .grid2 { grid-template-columns: 1fr; }   /* kartu bertumpuk ke bawah */
+  .two { grid-template-columns: 1fr; }
+
+  /* tabel utama berubah menjadi kartu per lamaran (judul kolom ditampilkan lewat data-label) */
+  .mt { table-layout: auto; }
+  .mt thead { display: none; }
+  .mt, .mt tbody, .mt tr, .mt td { display: block; width: 100%; }
+  .mt tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .mt tr:last-child { border-bottom: 0; }
+  .mt td { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 0; padding: 6px 14px; text-align: right; }
+  .mt td::before { content: attr(data-label); font-weight: 700; color: var(--muted); text-align: left; }
+  .mt td.act { justify-content: flex-end; }
+  .mt td.act::before { content: none; }
+}
+@media (max-width: 600px) {
+  .summary.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* empat kartu jadi 2 x 2 */
+  .k4 .sum:nth-child(odd) { border-left: 0; }
+  .k4 .sum:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+
+/* Untuk pengguna yang mematikan animasi di perangkatnya */
+@media (prefers-reduced-motion: reduce) {
+  .modal { animation: none; }
+  .fill, .tg svg { transition: none; }
+}
+</style>
 </head>
 <body>
-  <iframe
-    id="app"
-    title="Job Application Tracker"
-   src="https://script.google.com/macros/s/AKfycbzl2EMCBVjEhLEkvj0YcYPxPna43NbbzjiNokW1fGASvC3MIoMLI-mWSjXQr-0tJhsy/exec"
-    allow="fullscreen"></iframe>
+
+<!-- =====================================================================
+     [B] HTML  -  KERANGKA HALAMAN
+     Di sini hanya kerangka dan tulisan tetap. Isi tabel, angka, dan grafik
+     dikosongkan dulu, lalu diisi oleh bagian [C] SCRIPT lewat "id"-nya.
+     Contoh: <tbody id="rows"> diisi oleh fungsi renderTable().
+     ===================================================================== -->
+
+<!-- Layar "Preparing database..." (hilang otomatis setelah data dimuat) -->
+<div class="loading" id="loading">Preparing database…</div>
+
+
+<!-- ============================ HALAMAN 1: DASHBOARD ============================ -->
+<div class="wrap" id="viewDash">
+
+  <!-- Judul, pilihan tahun, dan tombol tambah lamaran -->
+  <header>
+    <div>
+      <h1>Job Application Tracker</h1>
+      <p class="sub" id="year"></p>   <!-- diisi: "Year 2026 · 11 applications recorded" -->
+    </div>
+    <div class="hdr-actions">
+      <select id="yearSel" onchange="setYear(this.value)" aria-label="Select year"></select>
+      <span class="vo">View only</span>   <!-- hanya tampil di mode hanya-lihat (READ_ONLY = true) -->
+      <button class="btn" id="addBtn" onclick="openForm()">Add application</button>
+    </div>
+  </header>
+
+  <!-- Banner kuning: muncul bila ada lamaran yang otomatis menjadi Not Proceed -->
+  <div class="notice" id="notice"></div>
+
+  <!-- Kartu "Processed": jumlah lamaran di setiap status -->
+  <section class="pipe">
+    <h2>Processed</h2>
+    <div class="stages" id="stages"></div>
+    <button class="more" onclick="showOP()">More info</button>   <!-- buka halaman On Process Tracker -->
+  </section>
+
+  <!-- Baris tengah: kartu Summary + kartu kecil (kiri) dan grafik per bulan (kanan) -->
+  <section class="grid2">
+    <div class="col">
+      <section class="pipe">
+        <h2>Summary</h2>
+        <div class="stages" id="sumTop"></div>                  <!-- angka besar Total apply -->
+        <div class="stages sumrow" id="sumRow"></div>           <!-- Waiting, On process, Declined, Offering (bisa diklik) -->
+      </section>
+      <section class="summary k4" id="sumCards"></section>      <!-- Avg per month, Top month, Direct decline, Post-process decline -->
+    </div>
+    <div class="panel"><h2 id="mTitle">Applications per month</h2><div id="byMonth"></div></div>
+  </section>
+
+  <!-- Dua grafik batang: jenis pekerjaan dan portal lowongan -->
+  <section class="grid">
+    <div class="panel"><h2>Job type overall</h2><div id="byType"></div></div>
+    <div class="panel"><h2>Job portal overall</h2><div id="byReff"></div></div>
+  </section>
+
+  <!-- Pencarian dan filter tabel -->
+  <div class="tools" id="tableTop">
+    <input id="q" placeholder="Search Company, Position or Notes" oninput="filterChange()">
+    <select id="fField" onchange="fieldChange()" aria-label="Filter by"></select>
+    <select id="fVal" onchange="filterChange()" aria-label="Filter value" disabled></select>
+    <button class="chip" id="grpChip" onclick="pickGroup(GROUP)" title="Clear this filter"></button>
+  </div>
+
+  <!-- Tabel utama. Judul kolom ada di sini; baris-barisnya dibuat oleh renderTable() -->
+  <div class="tablebox fit">
+    <table class="mt cc">
+      <thead>
+        <tr>
+          <th>No</th><th>Company</th><th>Position</th><th>Type</th><th>Portal</th>
+          <th><span class="sortbox">Date<button type="button" class="sb" id="sortBtn" onclick="toggleSort()"></button></span></th>
+          <th>Progress</th><th>Notes</th><th><span class="sr">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">No applications yet. Click “Add application” to get started.</div>
+    <div class="pager" id="pager" style="display:none">
+      <span class="pi" id="pgInfo"></span>
+      <div class="btns">
+        <button class="more" id="pgPrev" onclick="goPage(-1)">Previous</button>
+        <button class="more" id="pgNext" onclick="goPage(1)">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================== HALAMAN 2: ON PROCESS TRACKER ======================== -->
+<div class="wrap" id="viewOP" style="display:none">
+
+  <header>
+    <div>
+      <h1>On Process Tracker</h1>
+      <p class="sub" id="opSub"></p>
+    </div>
+    <div class="hdr-actions"><button class="more" onclick="showDash()">Back to dashboard</button></div>
+  </header>
+
+  <!-- Kartu ringkasan (Longest process time, Most process steps, dst.) -->
+  <section class="summary" id="opSummary"></section>
+
+  <!-- Pie chart dan grafik batang berdasarkan riwayat -->
+  <section class="grid2">
+    <div class="panel"><h2>Stage distribution</h2><p class="cap">Share of all stage entries, based on history</p><div class="op-pie" id="opPie"></div></div>
+    <div class="panel"><h2>Count per stage</h2><p class="cap">Applications that have reached each stage, including those that moved on</p><div id="opBars"></div></div>
+  </section>
+
+  <!-- Tabel On Process. Baris riwayat (panah di samping nama perusahaan) dibuat oleh renderOpTable() -->
+  <div class="tablebox">
+    <table class="cc op-t">
+      <thead>
+        <tr>
+          <th>No</th><th>Company</th><th>Position</th><th>Type</th><th>Portal</th>
+          <th><span class="sortbox">Date<button type="button" class="sb" id="opSortBtn" onclick="toggleOpSort()"></button></span></th>
+          <th>Progress</th><th>Days in stage</th><th>Process in days</th>
+        </tr>
+      </thead>
+      <tbody id="opRows"></tbody>
+    </table>
+    <div class="empty" id="opEmpty" style="display:none">No applications have reached the Assessment to Presentation stages yet.</div>
+    <div class="pager" id="opPager" style="display:none">
+      <span class="pi" id="opPgInfo"></span>
+      <div class="btns">
+        <button class="more" id="opPgPrev" onclick="goOpPage(-1)">Previous</button>
+        <button class="more" id="opPgNext" onclick="goOpPage(1)">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================= FORM TAMBAH / EDIT LAMARAN (pop-up) ======================= -->
+<div class="overlay" id="ov" onclick="if(event.target===this)closeForm()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h3 id="mt">Add application</h3>
+    <input type="hidden" id="fId">   <!-- kosong = lamaran baru; terisi = sedang mengedit -->
+    <label for="fCompany">Company</label><input id="fCompany" required>
+    <label for="fPosition">Position</label><input id="fPosition" required>
+    <div class="two">
+      <div><label for="fTypeSel">Type</label><select id="fTypeSel"></select></div>
+      <div><label for="fReff">Portal</label><select id="fReff"></select></div>
+    </div>
+    <div class="two">
+      <div><label for="fDate">Date</label><input type="date" id="fDate" required></div>
+      <div><label for="fProgress">Progress</label><select id="fProgress"></select></div>
+    </div>
+    <label for="fNotes">Notes</label><textarea id="fNotes" rows="3"></textarea>
+    <div class="foot">
+      <button class="btn ghost" onclick="closeForm()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="save()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pesan singkat di atas layar ("Application saved", dll.) -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   [C] SCRIPT  -  "OTAK" HALAMAN
+   =====================================================================
+
+   ALUR KERJA SECARA SINGKAT
+     1. Halaman dibuka  -> load() meminta data ke Code.gs (fungsi getApps).
+     2. Data diterima   -> disimpan di APPS (daftar lamaran) dan OPT (daftar pilihan).
+     3. render()        -> mengisi semua angka, grafik, dan tabel dari APPS.
+     4. Kamu menekan tombol -> fungsi yang sesuai berjalan (misalnya save(),
+        quickStatus(), remove()). Fungsi itu menyuruh Code.gs menyimpan data,
+        lalu load() dipanggil lagi supaya tampilan ikut terbarui.
+
+   DAFTAR ISI  (cari dengan Ctrl+F, misalnya "=== 3.")
+     === 1. PENGATURAN           angka & daftar yang aman diubah
+     === 2. DATA & KONDISI HALAMAN
+     === 3. ALAT BANTU           tanggal, teks, dan hal kecil yang dipakai di banyak tempat
+     === 4. BERBICARA DENGAN CODE.GS  (muat, simpan, ganti status, hapus)
+     === 5. TABEL UTAMA         filter, urutan tanggal, halaman
+     === 6. DASHBOARD           kartu angka dan grafik batang
+     === 7. FORM & NOTIFIKASI
+     === 8. HALAMAN ON PROCESS TRACKER
+     === 9. START
+
+   CATATAN PENTING:
+     - Nama tahap/status ("Submitted", "Assessment", dst.) HARUS sama persis dengan
+       yang ada di Code.gs (bagian OPTIONS.statuses), termasuk huruf besar-kecil.
+     - Kata "const" = nilai tetap, "let" = nilai yang bisa berubah, "function" = kumpulan
+       langkah yang diberi nama. Tulisan setelah "//" adalah catatan dan tidak dijalankan.
+   ===================================================================== */
+
+
+/* === 1. PENGATURAN  (aman diubah) ============================================ */
+
+const PER = 6;                 // jumlah baris tabel per halaman (tabel utama & On Process)
+const CHART_MAX_MONTHS = 12;   // batas bulan yang digambar di grafik "Applications per month" saat "All years"
+
+// Tahap yang dianggap "on process" (urutannya = urutan di pie chart & grafik)
+const OPS = ['Assessment', 'HR - Intv', 'User - Intv', 'FGD', 'Presentation'];
+// Status akhir: setelah ini sebuah lamaran dianggap selesai
+const TERMINAL = ['Offering', 'Rejected', 'Not Proceed'];
+
+// Warna irisan pie chart, urut sesuai OPS (Assessment, HR - Intv, User - Intv, FGD, Presentation)
+const PIE_COLORS = ['#0f766e', '#2b4ea2', '#d98a00', '#b42318', '#7a4fb5'];
+
+// Nama bulan (singkat dan lengkap)
+const MON_S = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MON_L = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// MODE HANYA-LIHAT.
+//   false = aplikasi lengkap (bisa tambah, edit, hapus, ganti status)  -> untuk project milikmu.
+//   true  = hanya melihat: tombol Add, ikon edit/hapus, dan dropdown status disembunyikan.
+// Ubah menjadi true HANYA di project khusus penonton. Pengamanan yang sebenarnya ada di Code.gs
+// project penonton, yang memang tidak punya fungsi simpan/hapus (lihat panduan deploy).
+const READ_ONLY = true;
+
+// ALAMAT DATA UNTUK HOSTING DI LUAR APPS SCRIPT (misalnya GitHub Pages).
+// Dikosongkan ('') bila halaman ini dibuka dari Apps Script (project utama maupun penonton).
+// Untuk GitHub Pages, isi dengan alamat web app project penonton yang berakhiran /exec.
+// Halaman akan mengambil data lewat alamat itu TANPA membawa cookie login Google, sehingga tidak
+// terganggu masalah "banyak akun Google" di browser HP.
+const API_URL = 'https://script.google.com/macros/s/AKfycbzl2EMCBVjEhLEkvj0YcYPxPna43NbbzjiNokW1fGASvC3MIoMLI-mWSjXQr-0tJhsy/exec';
+
+// Pilihan pada dropdown "Filter by" di atas tabel: [nama kolom di data, tulisan di layar]
+const FILTER_FIELDS = [['type', 'Type'], ['reff', 'Portal'], ['date', 'Date'], ['progress', 'Progress']];
+
+// Gambar ikon kecil (SVG). Bentuknya tidak perlu diubah.
+const icon = (paths, width = 2) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + width +
+  '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+const IC_EDIT  = icon('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>');
+const IC_DEL   = icon('<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>');
+const IC_UP    = icon('<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>', 3);
+const IC_DOWN  = icon('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>', 3);
+const IC_CHEV  = icon('<path d="m9 6 6 6-6 6"/>', 2.5);
+const IC_CLOSE = icon('<path d="M18 6 6 18M6 6l12 12"/>', 2.5);
+
+
+/* === 2. DATA & KONDISI HALAMAN  (jangan diubah manual) ======================= */
+
+let APPS = [];                                  // semua lamaran (dari Code.gs)
+let OPT = {types: [], reffs: [], statuses: []}; // daftar pilihan dropdown (dari Code.gs)
+let STALL = 14;                                 // batas hari tanpa kabar sebelum otomatis Not Proceed (dari Code.gs)
+
+let YEAR = String(new Date().getFullYear());    // tahun yang dipilih: '2026' atau 'all'
+
+// Tabel utama
+let PAGE = 0;                                   // halaman yang sedang dibuka (0 = halaman pertama)
+let SORT = 'desc';                              // urutan tanggal: 'desc' = terbaru dulu, 'asc' = terlama dulu
+let GROUP = '';                                 // filter dari kotak ringkasan: 'wait' | 'proc' | 'decl' | 'offer' | ''
+
+// Tabel On Process
+let OP_PAGE = 0;
+let OP_SORT = 'desc';
+const OPEN = new Set();                         // id lamaran yang riwayatnya sedang dibuka (maksimal satu)
+
+
+/* === 3. ALAT BANTU ========================================================== */
+
+// Mengambil elemen halaman lewat id-nya. Contoh: $('rows') = elemen <tbody id="rows">
+const $ = id => document.getElementById(id);
+
+// Membersihkan teks supaya aman ditampilkan di halaman (mencegah karakter < > & merusak tampilan)
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
+// Kata + jumlah: plural(1,'day') -> "1 day", plural(3,'day') -> "3 days"
+const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
+
+// Apakah lamaran ini termasuk tahun yang dipilih? ('all' = semua tahun)
+const inYear = a => YEAR === 'all' || a.date.slice(0, 4) === YEAR;
+
+// Menentukan warna badge sebuah status: wait (biru) | offer (hijau) | decl (merah) | proc (kuning)
+const group = s => s === 'Submitted' ? 'wait'
+  : s === 'Offering' ? 'offer'
+  : (s === 'Rejected' || s === 'Not Proceed') ? 'decl'
+  : 'proc';
+
+/* --- Tanggal. Tanggal disimpan sebagai teks "2026-11-13" (tahun-bulan-hari) --- */
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); // Date -> "2026-11-13"
+const today = () => ymd(new Date());                                                                                              // tanggal hari ini
+const toD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };                                     // "2026-11-13" -> Date
+const dayDiff = (a, b) => Math.round((toD(b) - toD(a)) / 864e5);                                                                 // selisih hari dari a ke b
+const daysSince = s => Math.max(0, dayDiff(s, today()));                                                                          // sudah berapa hari sejak tanggal s
+const dayTxt = n => plural(n, 'day');
+const fmtDate = s => { const [y, m, d] = s.split('-').map(Number); return d + ' ' + MON_S[m - 1] + ' ' + y; };                      // "2026-11-13" -> "13 Nov 2026"
+
+// Memotong daftar menjadi halaman berisi PER baris. Mengembalikan halaman yang valid, jumlah halaman, dst.
+function paginate(list, page) {
+  const pages = Math.max(1, Math.ceil(list.length / PER));
+  const p = Math.min(Math.max(page, 0), pages - 1);
+  const start = p * PER;
+  return {page: p, pages: pages, start: start, view: list.slice(start, start + PER)};
+}
+
+// Memperbarui tulisan "Showing 1-6 of 11 applications" dan tombol Previous/Next di bawah tabel
+function updatePager(ids, p, total) {
+  $(ids.box).style.display = total > PER ? 'flex' : 'none';   // disembunyikan bila datanya 6 atau kurang
+  $(ids.info).textContent = 'Showing ' + (p.start + 1) + '–' + (p.start + p.view.length) + ' of ' + plural(total, 'application');
+  $(ids.prev).disabled = p.page === 0;
+  $(ids.next).disabled = p.page >= p.pages - 1;
+}
+const MAIN_PAGER = {box: 'pager',   info: 'pgInfo',   prev: 'pgPrev',   next: 'pgNext'};
+const OP_PAGER   = {box: 'opPager', info: 'opPgInfo', prev: 'opPgPrev', next: 'opPgNext'};
+
+// Panah di judul kolom Date: naik = ascending (terlama dulu), turun = descending (terbaru dulu)
+function updateSortButton(id, order) {
+  const btn = $(id), asc = order === 'asc';
+  btn.innerHTML = asc ? IC_UP : IC_DOWN;
+  btn.title = asc ? 'Sorted ascending (oldest first). Click to sort descending.' : 'Sorted descending (newest first). Click to sort ascending.';
+  btn.setAttribute('aria-label', btn.title);
+}
+const byDate = order => (a, b) => order === 'asc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+
+// Dropdown status kecil berwarna yang dipakai di kedua tabel (mengganti status langsung dari tabel)
+function statusSelect(a) {
+  if (READ_ONLY) return '<span class="badge ' + group(a.progress) + ' ro-badge">' + esc(a.progress) + '</span>';   // hanya label
+  return '<select class="badge ' + group(a.progress) + '" onchange="quickStatus(\'' + a.id + '\',this.value)" aria-label="Change progress">' +
+    OPT.statuses.map(s => '<option' + (s === a.progress ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select>';
+}
+
+
+/* === 4. BERBICARA DENGAN CODE.GS ============================================ */
+/* google.script.run = "telepon" ke Code.gs.
+     .getApps() / .saveApp(data) / .deleteApp(id)  = fungsi yang ada di Code.gs
+     .withSuccessHandler(...)  = apa yang dilakukan bila BERHASIL
+     .withFailureHandler(...)  = apa yang dilakukan bila GAGAL                  */
+
+// Penghubung untuk hosting di luar Apps Script. Hanya aktif bila objek "google" tidak ada
+// (artinya halaman dibuka dari GitHub Pages, bukan dari Apps Script). Di Apps Script bagian ini tidak berjalan.
+// Cara kerjanya: google.script.run.getApps() diterjemahkan menjadi permintaan ke API_URL?api=1
+// (lihat doGet di Code-viewer.gs). credentials: 'omit' = permintaan dikirim TANPA cookie akun Google.
+if (typeof google === 'undefined') {
+  const callApi = (name, ok, fail) => {
+    if (name !== 'getApps') { if (fail) fail(new Error('Not available in view-only mode')); return; }
+    if (!API_URL) { if (fail) fail(new Error('API_URL is not set in index.html')); return; }
+    fetch(API_URL + (API_URL.indexOf('?') < 0 ? '?' : '&') + 'api=1', {credentials: 'omit', cache: 'no-store'})
+      .then(r => r.json())
+      .then(d => { if (d.error) throw new Error(d.error); if (ok) ok(d); })
+      .catch(e => { if (fail) fail(e); });
+  };
+  const makeRunner = (ok, fail) => new Proxy({}, {get: (_, name) => {
+    if (name === 'withSuccessHandler') return f => makeRunner(f, fail);
+    if (name === 'withFailureHandler') return f => makeRunner(ok, f);
+    return () => callApi(name, ok, fail);
+  }});
+  window.google = {script: {run: makeRunner(null, null)}};
+}
+
+// Memuat semua data lalu menggambar ulang halaman. Dipanggil saat halaman dibuka dan setelah setiap perubahan.
+function load() {
+  google.script.run
+    .withSuccessHandler(r => {
+      APPS = r.apps;                   // daftar lamaran (setiap lamaran juga membawa riwayat status: hist)
+      OPT = r.options;                 // isi dropdown Type / Portal / Progress
+      STALL = r.stallDays || 14;       // batas hari tanpa kabar
+      fillSelects();
+      fillYears();
+      render();
+      $('loading').style.display = 'none';
+      if (r.auto > 0) {                // ada lamaran yang otomatis menjadi Not Proceed -> tampilkan banner kuning
+        const n = $('notice');
+        n.textContent = r.auto + (r.auto === 1 ? ' application was' : ' applications were') + ' automatically moved to Not Proceed (Submitted for over 1 month, or no status change for over ' + STALL + ' days).';
+        n.style.display = 'block';
+      }
+    })
+    .withFailureHandler(e => { $('loading').textContent = 'Failed to load: ' + e.message; })
+    .getApps();
+}
+
+// Tombol Save di form: kirim data ke Code.gs
+function save() {
+  if (READ_ONLY) return;
+  const o = {
+    id: $('fId').value, company: $('fCompany').value, position: $('fPosition').value,
+    type: $('fTypeSel').value, reff: $('fReff').value, date: $('fDate').value,
+    progress: $('fProgress').value, notes: $('fNotes').value
+  };
+  if (!o.company.trim() || !o.position.trim() || !o.date) { toast('Company, Position, and Date are required'); return; }
+  $('saveBtn').disabled = true;   // cegah tombol ditekan dua kali
+  google.script.run
+    .withSuccessHandler(() => { $('saveBtn').disabled = false; closeForm(); toast('Application saved'); load(); })
+    .withFailureHandler(e => { $('saveBtn').disabled = false; toast(e.message); })
+    .saveApp(o);
+}
+
+// Mengganti status langsung dari dropdown di tabel. Layar diperbarui dulu (supaya terasa cepat),
+// lalu dikirim ke Code.gs yang juga mencatatnya di riwayat.
+function quickStatus(id, status) {
+  if (READ_ONLY) return;
+  const a = APPS.find(x => x.id === id);
+  if (!a) return;
+  const prev = a.progress;
+  a.progress = status;
+  if (prev !== status) a.hist = (a.hist || []).concat([{s: status, d: today(), src: 'manual'}]);
+  render();
+  google.script.run
+    .withSuccessHandler(() => { toast('Progress changed to ' + status); load(); })
+    .withFailureHandler(e => { toast(e.message); load(); })
+    .saveApp(Object.assign({}, a, {progress: status}));
+}
+
+// Tombol tong sampah: hapus lamaran (setelah konfirmasi)
+function remove(id) {
+  if (READ_ONLY) return;
+  const a = APPS.find(x => x.id === id);
+  if (!a || !confirm('Delete application ' + a.company + ' - ' + a.position + '?')) return;
+  google.script.run
+    .withSuccessHandler(() => { toast('Application deleted'); load(); })
+    .withFailureHandler(e => toast(e.message))
+    .deleteApp(id);
+}
+
+
+/* === 5. TABEL UTAMA  (filter, urutan, halaman) ============================== */
+
+// Kotak kecil di Summary = filter tabel. "test" menentukan status mana yang termasuk kelompok itu.
+const GROUPS = {
+  proc:  {label: 'On process', test: s => OPS.includes(s)},
+  wait:  {label: 'Waiting',    test: s => s === 'Submitted'},
+  decl:  {label: 'Declined',   test: s => s === 'Rejected' || s === 'Not Proceed'},
+  offer: {label: 'Offering',   test: s => s === 'Offering'}
+};
+const EMPTY0 = $('empty').textContent;   // pesan "tabel kosong" bawaan (dipulihkan saat filter dibersihkan)
+
+// Klik kotak ringkasan: terapkan filter dan gulir ke tabel. Klik lagi pada kotak yang sama = batalkan.
+function pickGroup(k) {
+  GROUP = GROUP === k ? '' : k;
+  PAGE = 0;
+  if (GROUP) { $('fField').value = ''; fieldChange(); }   // kosongkan dropdown filter agar tidak bentrok
+  render();
+  if (GROUP) $('tableTop').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+}
+
+function filterChange() { PAGE = 0; renderTable(); }                                   // dipanggil saat mengetik di pencarian / mengganti filter
+function fieldChange()  { $('fVal').innerHTML = ''; fillFilterValues(); filterChange(); }   // dipanggil saat mengganti dropdown "Filter by"
+function goPage(d)      { PAGE += d; renderTable(); }                                  // tombol Previous (-1) / Next (+1)
+function toggleSort()   { SORT = SORT === 'asc' ? 'desc' : 'asc'; PAGE = 0; renderTable(); }
+
+// Mengisi dropdown "Filter by": Filter by Type / Portal / Date / Progress
+function fillSelects() {
+  const cur = $('fField').value;
+  $('fField').innerHTML = '<option value="">Filter by</option>' +
+    FILTER_FIELDS.map(f => '<option value="' + f[0] + '">Filter by ' + f[1] + '</option>').join('');
+  $('fField').value = cur;
+  fillFilterValues();
+  fillFormSelects();
+}
+
+// Daftar nilai untuk dropdown kedua, sesuai kolom yang dipilih di dropdown pertama.
+// Nilai lama yang sudah tidak ada di daftar pilihan tetap ikut ditampilkan supaya datanya tidak "hilang".
+function filterValues(f) {
+  const withExtra = (list, key) => list.concat([...new Set(APPS.map(a => a[key]).filter(v => v && !list.includes(v)))]).map(v => [v, v]);
+  if (f === 'type') return withExtra(OPT.types, 'type');
+  if (f === 'reff') return withExtra(OPT.reffs, 'reff');
+  if (f === 'progress') return withExtra(OPT.statuses, 'progress');
+  if (f === 'date') return [...new Set(APPS.filter(inYear).map(a => a.date.slice(0, 7)))].sort().map(k => [k, MON_S[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4)]);
+  return [];
+}
+
+function fillFilterValues() {
+  const f = $('fField').value, sel = $('fVal'), prev = sel.value;
+  if (!f) {                                    // belum memilih kolom -> dropdown kedua dinonaktifkan
+    sel.innerHTML = '<option value="">Select value</option>';
+    sel.disabled = true;
+    return;
+  }
+  const label = f === 'date' ? 'Month' : FILTER_FIELDS.find(x => x[0] === f)[1];
+  sel.innerHTML = '<option value="">All ' + label + '</option>' +
+    filterValues(f).map(v => '<option value="' + esc(v[0]) + '">' + esc(v[1]) + '</option>').join('');
+  sel.disabled = false;
+  sel.value = [...sel.options].some(o => o.value === prev) ? prev : '';   // pertahankan pilihan sebelumnya bila masih ada
+}
+
+// Menggambar ulang isi tabel utama
+function renderTable() {
+  // 1) Pilih lamaran yang cocok dengan tahun, kotak ringkasan, filter dropdown, dan kata pencarian
+  const q = $('q').value.toLowerCase(), ff = $('fField').value, fv = $('fVal').value;
+  const list = APPS.filter(a =>
+    inYear(a) &&
+    (!GROUP || GROUPS[GROUP].test(a.progress)) &&
+    (!ff || !fv || (ff === 'date' ? a.date.slice(0, 7) : a[ff]) === fv) &&
+    (!q || (a.company + ' ' + a.position + ' ' + a.notes).toLowerCase().includes(q))
+  ).sort(byDate(SORT));
+
+  // 2) Ambil 6 baris untuk halaman yang sedang dibuka
+  const p = paginate(list, PAGE);
+  PAGE = p.page;
+
+  // 3) Pesan kosong, label filter aktif ("Showing: Waiting x")
+  $('empty').style.display = list.length ? 'none' : 'block';
+  $('empty').textContent = (GROUP || (ff && fv) || q) ? 'No applications match the current filter.' : EMPTY0;
+  const chip = $('grpChip');
+  chip.style.display = GROUP ? 'inline-flex' : 'none';
+  if (GROUP) chip.innerHTML = 'Showing: ' + esc(GROUPS[GROUP].label) + ' ' + IC_CLOSE;
+
+  // 4) Susun baris tabel. data-label dipakai di layar HP untuk menampilkan nama kolom.
+  $('rows').innerHTML = p.view.map((a, i) =>
+    '<tr><td data-label="No">' + (p.start + i + 1) + '</td>' +
+    '<td class="co" data-label="Company">' + esc(a.company) + '</td>' +
+    '<td class="pos" data-label="Position">' + esc(a.position) + '</td>' +
+    '<td data-label="Type">' + esc(a.type) + '</td>' +
+    '<td data-label="Portal">' + esc(a.reff) + '</td>' +
+    '<td data-label="Date">' + fmtDate(a.date) + '</td>' +
+    '<td data-label="Progress">' + statusSelect(a) + '</td>' +
+    '<td class="nt" data-label="Notes">' + esc(a.notes) + '</td>' +
+    (READ_ONLY ? '' : '<td class="act"><button class="ib" title="Edit" aria-label="Edit" onclick="openForm(\'' + a.id + '\')">' + IC_EDIT + '</button>' +
+    '<button class="ib del" title="Delete" aria-label="Delete" onclick="remove(\'' + a.id + '\')">' + IC_DEL + '</button></td>') + '</tr>'
+  ).join('');
+
+  updatePager(MAIN_PAGER, p, list.length);
+  updateSortButton('sortBtn', SORT);
+}
+
+
+/* === 6. DASHBOARD  (kartu angka dan grafik batang) ========================== */
+
+// Menggambar ulang semua bagian halaman sekaligus
+function render() { fillFilterValues(); renderStats(); renderTable(); renderOP(); renderKpi(); }
+
+// Pilihan tahun di pojok kanan atas: tahun ini, tahun depan, dan semua tahun yang punya data, plus "All years"
+function fillYears() {
+  const cy = new Date().getFullYear(), set = new Set([cy, cy + 1]);
+  APPS.forEach(a => set.add(+a.date.slice(0, 4)));
+  const ys = [...set].sort((a, b) => a - b);
+  if (YEAR !== 'all' && !ys.includes(+YEAR)) YEAR = String(cy);
+  $('yearSel').innerHTML = ys.map(y => '<option value="' + y + '">' + y + '</option>').join('') + '<option value="all">All years</option>';
+  $('yearSel').value = YEAR;
+}
+function setYear(v) { YEAR = v; PAGE = 0; render(); }
+
+// Grafik batang horizontal.
+//   el     = id tempat grafik digambar     labels = daftar nama batang
+//   data   = {nama: jumlah}                fmt    = (opsional) cara menulis nama batang
+function bars(el, labels, data, fmt) {
+  const max = Math.max(1, ...labels.map(l => data[l] || 0));   // batang terpanjang = 100%
+  $(el).innerHTML = labels.length ? labels.map(l => {
+    const n = data[l] || 0;
+    return '<div class="row"><span>' + esc(fmt ? fmt(l) : l) + '</span><div class="track"><div class="fill" style="width:' + (n / max * 100) + '%"></div></div><i>' + n + '</i></div>';
+  }).join('') : '<div class="sub">No data yet</div>';
+}
+
+// Kartu "Processed", "Summary" (Total apply + 4 kotak kecil), serta grafik Job type dan Job portal
+function renderStats() {
+  const F = APPS.filter(inYear);   // lamaran pada tahun yang dipilih
+  $('year').textContent = (YEAR === 'all' ? 'All years' : 'Year ' + YEAR) + ' · ' + plural(F.length, 'application') + ' recorded';
+
+  const by = f => { const o = {}; F.forEach(a => { o[a[f]] = (o[a[f]] || 0) + 1; }); return o; };   // hitung jumlah per nilai kolom f
+  const st = by('progress');
+  const proc = OPS.reduce((s, x) => s + (st[x] || 0), 0);                  // jumlah lamaran yang sedang on process
+  const declined = (st['Rejected'] || 0) + (st['Not Proceed'] || 0);
+
+  // Kartu "Processed": satu kotak untuk setiap status
+  $('stages').innerHTML = OPT.statuses.map(s => {
+    const n = st[s] || 0;
+    return '<div class="stage ' + group(s) + (n ? '' : ' zero') + '"><b>' + n + '</b><span>' + esc(s) + '</span><div class="bar' + (n ? ' on' : '') + '"></div></div>';
+  }).join('');
+
+  // Kartu "Summary": angka besar Total apply, lalu empat kotak kecil yang bisa diklik (menjadi filter tabel)
+  $('sumTop').innerHTML = '<div class="stage tot' + (F.length ? '' : ' zero') + '"><b>' + F.length + '</b><span>Total apply</span><div class="bar' + (F.length ? ' on' : '') + '"></div></div>';
+  $('sumRow').innerHTML = [
+    ['Waiting', st['Submitted'] || 0, 'wait'], ['On process', proc, 'proc'],
+    ['Declined', declined, 'decl'],            ['Offering', st['Offering'] || 0, 'offer']
+  ].map(x => '<button type="button" class="stage mini ' + x[2] + (x[1] ? '' : ' zero') + '" aria-pressed="' + (GROUP === x[2]) +
+    '" onclick="pickGroup(\'' + x[2] + '\')" title="Show ' + esc(x[0]) + ' applications in the table"><b>' + x[1] + '</b><span>' + esc(x[0]) +
+    '</span><div class="bar' + (x[1] ? ' on' : '') + '"></div></button>').join('');
+
+  // Grafik Job type dan Job portal. Nilai lama yang sudah tidak ada di daftar pilihan tetap ditampilkan di bawahnya.
+  const bt = by('type'), br = by('reff');
+  const extra = (list, o) => Object.keys(o).filter(k => k && !list.includes(k));
+  bars('byType', OPT.types.concat(extra(OPT.types, bt)), bt);
+  bars('byReff', OPT.reffs.concat(extra(OPT.reffs, br)), br);
+}
+
+// Empat kartu kecil (Avg per month, Top month, Direct decline, Post-process decline) dan grafik "Applications per month".
+// Saat "All years": rentang bulan dari lamaran pertama sampai bulan ini. Saat satu tahun dipilih: Januari sampai Desember.
+function renderKpi() {
+  const now = new Date(), cy = now.getFullYear(), isAll = YEAR === 'all';
+  const sy = isAll ? cy : +YEAR;                          // tahun acuan
+  const monthKey = d => ymd(d).slice(0, 7);               // Date -> "2026-11"
+  const nowKey = monthKey(now);
+  const all = {};                                          // jumlah lamaran per bulan: {"2026-11": 3, ...}
+  APPS.forEach(a => { const k = a.date.slice(0, 7); all[k] = (all[k] || 0) + 1; });
+
+  // Daftar bulan yang dipakai
+  let range = [];
+  if (isAll) {
+    const keys = Object.keys(all).sort();
+    if (keys.length) {
+      let [y, m] = keys[0].split('-').map(Number);
+      const last = keys[keys.length - 1], end = last > nowKey ? last : nowKey;
+      for (;;) {                                           // dari bulan pertama sampai bulan terakhir/bulan ini
+        const k = y + '-' + String(m).padStart(2, '0');
+        range.push(k);
+        if (k >= end) break;
+        if (++m > 12) { m = 1; y++; }
+      }
+    }
+  } else {
+    range = Array.from({length: 12}, (_, i) => sy + '-' + String(i + 1).padStart(2, '0'));
+  }
+
+  // Kartu 1-2: rata-rata per bulan dan bulan teramai
+  const total = range.reduce((s, k) => s + (all[k] || 0), 0);
+  const elapsed = isAll ? Math.max(1, range.filter(k => k <= nowKey).length) : (sy === cy ? now.getMonth() + 1 : 12);   // bulan yang sudah berjalan
+  const mshort = k => MON_S[+k.slice(5, 7) - 1];
+  const mlong = k => MON_L[+k.slice(5, 7) - 1];
+  let best = null;                                         // Top month = bulan dengan lamaran terbanyak (seri -> bulan terbaru)
+  range.forEach(k => { if (all[k] && (!best || all[k] >= all[best])) best = k; });
+
+  // Kartu 3-4: lamaran yang berakhir Not Proceed/Rejected, dengan atau tanpa melewati tahap on process.
+  // "Direct" = tidak pernah masuk tahap Assessment..Presentation (dilihat dari riwayat status).
+  const F = APPS.filter(inYear);
+  const declined = F.filter(a => a.progress === 'Rejected' || a.progress === 'Not Proceed');
+  const viaOps = declined.filter(a => histOf(a).some(e => OPS.includes(e.s))).length;
+  const direct = declined.length - viaOps;
+  const pct = n => F.length ? (Math.round(n / F.length * 1000) / 10) + '%' : '0%';   // persen, 1 angka desimal
+
+  // Setiap kartu: [judul, nilai besar, keterangan kecil, (opsional) teks penjelasan saat kursor diarahkan]
+  const sums = [
+    ['Avg per month', (total / elapsed).toFixed(2), 'over ' + plural(elapsed, 'month')],
+    ['Top month', best ? mshort(best) + (isAll ? ' ' + best.slice(2, 4) : '') : '-', best ? plural(all[best], 'application') : ''],
+    ['Direct decline', pct(direct), direct + ' of ' + plural(F.length, 'application'),
+      'Share of all applications that went straight from Submitted to Not Proceed or Rejected, without reaching any stage from Assessment to Presentation'],
+    ['Post-process decline', pct(viaOps), viaOps + ' of ' + plural(F.length, 'application'),
+      'Share of all applications that reached at least one stage from Assessment to Presentation before ending as Not Proceed or Rejected']
+  ];
+  $('sumCards').innerHTML = sums.map(x => '<div class="sum"' + (x[3] ? ' title="' + esc(x[3]) + '"' : '') + '><small>' + esc(x[0]) + '</small><b>' + esc(x[1]) + '</b>' + (x[2] ? '<em class="sm">' + esc(x[2]) + '</em>' : '') + '</div>').join('');
+
+  // Grafik "Applications per month". Bila "All years" dan datanya lebih dari 12 bulan, hanya 12 bulan terakhir yang digambar.
+  const cut = isAll && range.length > CHART_MAX_MONTHS;
+  const shown = cut ? range.slice(-CHART_MAX_MONTHS) : range;
+  $('mTitle').textContent = 'Applications per month' + (cut ? ' · Last ' + CHART_MAX_MONTHS + ' months' : '');
+  bars('byMonth', shown, all, k => isAll ? mlong(k) + ' ' + k.slice(0, 4) : mlong(k));
+}
+
+
+/* === 7. FORM & NOTIFIKASI ==================================================== */
+
+// Mengisi dropdown Type / Portal / Progress di form dari daftar pilihan (OPT)
+function fillFormSelects() {
+  const o = arr => arr.map(v => '<option>' + esc(v) + '</option>').join('');
+  $('fTypeSel').innerHTML = o(OPT.types);
+  $('fReff').innerHTML = o(OPT.reffs);
+  $('fProgress').innerHTML = o(OPT.statuses);
+}
+
+// Bila lamaran lama memakai pilihan yang sudah dihapus dari daftar, tambahkan sementara agar tidak hilang saat diedit
+function ensureOpt(id, v) {
+  if (v && ![...$(id).options].some(o => o.value === v)) $(id).insertAdjacentHTML('beforeend', '<option>' + esc(v) + '</option>');
+}
+
+// Membuka form. Tanpa id = tambah lamaran baru; dengan id = edit lamaran itu.
+function openForm(id) {
+  if (READ_ONLY) return;
+  const a = id ? APPS.find(x => x.id === id) : null;
+  fillFormSelects();
+  if (a) { ensureOpt('fTypeSel', a.type); ensureOpt('fReff', a.reff); ensureOpt('fProgress', a.progress); }
+  $('mt').textContent = a ? 'Edit application' : 'Add application';
+  $('fId').value = a ? a.id : '';
+  $('fCompany').value = a ? a.company : '';
+  $('fPosition').value = a ? a.position : '';
+  $('fTypeSel').value = a ? a.type : OPT.types[0];                           // bawaan lamaran baru: pilihan pertama
+  $('fReff').value = a ? a.reff : OPT.reffs[OPT.reffs.length - 1];           // bawaan: pilihan terakhir ("Other")
+  $('fDate').value = a ? a.date : today();                                   // bawaan: hari ini
+  $('fProgress').value = a ? a.progress : 'Submitted';                       // bawaan: Submitted
+  $('fNotes').value = a ? a.notes : '';
+  $('ov').classList.add('open');
+  $('fCompany').focus();
+}
+function closeForm() { $('ov').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });   // tombol Esc menutup form
+
+// Pesan singkat di atas layar, hilang sendiri setelah 2,6 detik (ubah angka 2600 untuk durasi lain)
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.display = 'none', 2600);
+}
+
+
+/* === 8. HALAMAN ON PROCESS TRACKER ========================================== */
+
+// Pindah antara dua halaman (dashboard <-> On Process Tracker)
+function showView(id) { ['viewDash', 'viewOP'].forEach(v => { $(v).style.display = v === id ? 'block' : 'none'; }); window.scrollTo(0, 0); }
+function showOP()   { showView('viewOP'); }
+function showDash() { showView('viewDash'); }
+
+// Riwayat status sebuah lamaran: daftar [{s: status, d: tanggal, src: sumber}].
+// Bila server belum punya riwayat (data lama), dibuat perkiraan sederhana: Submitted lalu status sekarang.
+function histOf(a) {
+  if (a.hist && a.hist.length) return a.hist;
+  const h = [{s: 'Submitted', d: a.date, src: 'import'}];
+  if (a.progress !== 'Submitted') h.push({s: a.progress, d: a.date, src: 'import'});
+  return h;
+}
+
+// Isi riwayat yang terbuka di bawah lamaran: kotak-kotak langkah, lalu satu kalimat keterangan.
+function journeyHTML(a) {
+  const h = a.h;
+  const steps = h.map((x, i) => {
+    const cur = i === h.length - 1, fin = cur && a.ended;            // cur = langkah terakhir, fin = langkah akhir (sudah selesai)
+    const days = cur ? a.inStage : dayDiff(x.d, h[i + 1].d);         // lama di langkah ini
+    return '<div class="js' + (fin ? ' end ' + group(x.s) : cur ? ' now' : '') + '"><span class="badge ' + group(x.s) + '">' + esc(x.s) + '</span><b>' +
+      (fin ? 'Final status' : dayTxt(days) + (cur ? ' so far' : '')) + '</b><small>' + fmtDate(x.d) +
+      (x.src === 'import' ? ' (est.)' : '') + (fin && x.src === 'auto' ? ' (automatic)' : '') + '</small></div>';
+  }).join('<span class="jar" aria-hidden="true">' + IC_CHEV + '</span>');   // tanda panah di antara langkah
+
+  let note = '';
+  if (a.ended) {
+    note = 'Finished as ' + a.progress + ' on ' + fmtDate(a.endD) + ', ' + dayTxt(a.days) + ' after applying.';
+  } else if (OPS.includes(a.progress)) {
+    const due = toD(h[h.length - 1].d); due.setDate(due.getDate() + STALL);   // tanggal batas otomatis Not Proceed
+    note = 'Moves to Not Proceed automatically on ' + fmtDate(ymd(due)) + ' (' + dayTxt(Math.max(0, a.left)) + ' left) if the status does not change.';
+  }
+  return '<div class="jrow">' + steps + '</div>' + (note ? '<p class="jnote">' + note + '</p>' : '');
+}
+
+// Hanya satu riwayat yang boleh terbuka: membuka yang baru otomatis menutup yang lama
+function toggleJ(id) {
+  const wasOpen = OPEN.has(id);
+  OPEN.clear();
+  if (!wasOpen) OPEN.add(id);
+  renderOP();
+}
+function toggleOpSort() { OP_SORT = OP_SORT === 'asc' ? 'desc' : 'asc'; OP_PAGE = 0; OPEN.clear(); renderOP(); }
+function goOpPage(d)    { OP_PAGE += d; OPEN.clear(); renderOP(); }
+
+// Mengumpulkan lamaran yang pernah masuk tahap Assessment..Presentation (termasuk yang sudah selesai)
+// lalu menambahkan angka hitungan ke masing-masing:
+//   ended   = sudah punya status akhir?        endD   = tanggal status akhir
+//   inStage = hari di tahap sekarang           days   = total hari proses (berhenti di status akhir)
+//   steps   = jumlah tahap on process yang dilewati     left = sisa hari sebelum otomatis Not Proceed
+function collectProcessRows() {
+  return APPS.map(a => ({a: a, h: histOf(a)}))
+    .filter(x => OPS.includes(x.a.progress) || x.h.some(e => OPS.includes(e.s)))
+    .map(x => {
+      const a = x.a, h = x.h, lastE = h[h.length - 1], ended = TERMINAL.includes(a.progress);
+      const inStage = ended ? null : daysSince(lastE.d);
+      return Object.assign({}, a, {
+        h: h, ended: ended, endD: ended ? lastE.d : null, inStage: inStage,
+        steps: new Set(h.map(e => e.s).filter(st => OPS.includes(st))).size,
+        days: ended ? Math.max(0, dayDiff(a.date, lastE.d)) : daysSince(a.date),
+        left: OPS.includes(a.progress) ? STALL - inStage : null
+      });
+    })
+    .sort(byDate(OP_SORT));
+}
+
+// Lima kartu ringkasan di atas halaman On Process Tracker
+//   rows = semua lamaran di halaman ini     act = hanya yang statusnya masih on process
+function renderOpSummary(rows, act) {
+  $('opSub').textContent = 'Every application that reached Assessment through Presentation stays here with its final status. With no status change for ' + STALL + ' days, an active one moves to Not Proceed automatically.';
+
+  const L = act[0];                                                          // proses terlama (yang masih berjalan)
+  const C = act.slice().sort((x, y) => x.left - y.left)[0];                  // paling dekat dengan batas otomatis Not Proceed
+  const M = rows.slice().sort((x, y) => (y.steps - x.steps) || (y.days - x.days))[0];   // langkah proses terbanyak (seri -> terlama)
+
+  // Tahap "ujung": tahap tepat sebelum lamaran menjadi Not Proceed (otomatis) atau Rejected (manual)
+  const dropped = rows.filter(a => a.ended && (a.progress === 'Rejected' || a.progress === 'Not Proceed'));
+  const drop = {};
+  dropped.forEach(a => {
+    const prev = a.h[a.h[a.h.length - 1].s === a.progress ? a.h.length - 2 : a.h.length - 1];
+    if (prev && OPS.includes(prev.s)) drop[prev.s] = (drop[prev.s] || 0) + 1;
+  });
+  let dropStage = null;
+  OPS.forEach(st => { if (drop[st] && (!dropStage || drop[st] > drop[dropStage])) dropStage = st; });
+
+  // Setiap kartu: [judul, nilai besar, keterangan kecil]
+  const sums = [
+    ['Longest process time', L ? dayTxt(L.days) : '-', L ? L.company + ', ' + L.position : ''],
+    ['Most process steps', M ? plural(M.steps, 'step') : '-', M ? M.company + ', ' + M.position : ''],
+    ['Most common drop-off stage', dropStage || '-', dropStage ? drop[dropStage] + ' of ' + dropped.length + ' ended here' : ''],
+    ['Closest to Not Proceed', C ? (C.left <= 0 ? 'Due' : dayTxt(C.left)) : '-', C ? C.company : ''],
+    ['Total on process', act.length, '']
+  ];
+  $('opSummary').innerHTML = sums.map(x => '<div class="sum"><small>' + esc(x[0]) + '</small><b>' + esc(x[1]) + '</b>' + (x[2] ? '<em class="sm">' + esc(x[2]) + '</em>' : '') + '</div>').join('');
+}
+
+// Pie chart (digambar manual dengan SVG).
+//   cnt = {tahap: jumlah}      entries = jumlah seluruh catatan masuk tahap (pembagi persen)
+function renderPie(cnt, entries) {
+  const cx = 260, cy = 175, r = 112, TAU = Math.PI * 2;         // pusat lingkaran (cx, cy) dan jari-jari (r) di kanvas 520 x 350
+  const pt = (a, rad) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];   // titik pada lingkaran untuk sudut a
+  const slices = OPS.map((s, i) => ({s: s, i: i, n: cnt[s]})).filter(x => x.n);   // hanya tahap yang punya data
+
+  if (!entries) {
+    $('opPie').innerHTML = '<div class="op-none">No data to display yet.</div>';
+    return;
+  }
+  let ang = -Math.PI / 2, g = '';          // mulai dari jam 12, searah jarum jam
+  const labs = [];                         // daftar label tulisan di luar lingkaran
+  slices.forEach(x => {
+    const frac = x.n / entries, a1 = ang + frac * TAU, mid = (ang + a1) / 2;
+    if (slices.length === 1) {             // satu irisan penuh digambar sebagai lingkaran
+      g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + PIE_COLORS[x.i] + '"/>';
+    } else {
+      const p0 = pt(ang, r), p1 = pt(a1, r);
+      g += '<path d="M' + cx + ' ' + cy + ' L' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + (frac > .5 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1] + ' Z" fill="' + PIE_COLORS[x.i] + '" style="stroke:var(--surface);stroke-width:2"/>';
+    }
+    // Posisi label: di tengah bila irisan ada di atas/bawah, di kiri/kanan bila di samping.
+    // Label atas digeser ke atas dan label bawah ke bawah supaya tidak terpotong tepi gambar.
+    const c = Math.cos(mid), sn = Math.sin(mid), t = pt(mid, r + 26);
+    const anchor = Math.abs(c) < 0.25 ? 'middle' : c < 0 ? 'end' : 'start';
+    let ty = t[1] + 4;
+    if (sn < -0.6) ty = t[1] - 14; else if (sn > 0.6) ty = t[1] + 12;
+    labs.push({x: t[0], y: ty, anchor: anchor, name: x.s, pct: (frac * 100).toFixed(1) + '%', l0: pt(mid, r), l1: pt(mid, r + 18)});
+    ang = a1;
+  });
+
+  // Cegah label di sisi yang sama saling menimpa (irisan kecil bersebelahan): beri jarak minimal 34 px
+  ['start', 'end'].forEach(side => {
+    const arr = labs.filter(l => l.anchor === side).sort((p, q) => p.y - q.y);
+    for (let i = 1; i < arr.length; i++) if (arr[i].y - arr[i - 1].y < 34) arr[i].y = arr[i - 1].y + 34;
+  });
+
+  // Gambar garis penunjuk + tulisan (nama tahap dan persen)
+  labs.forEach(l => {
+    const end = l.anchor === 'middle' ? '' : ' ' + l.x + ',' + (l.y - 4);
+    g += '<polyline points="' + l.l0[0] + ',' + l.l0[1] + ' ' + l.l1[0] + ',' + l.l1[1] + end + '" fill="none" style="stroke:var(--muted)"/>' +
+      '<text x="' + l.x + '" y="' + l.y + '" text-anchor="' + l.anchor + '" font-size="13" font-weight="600" font-family="inherit" style="fill:var(--ink)">' + esc(l.name) +
+      '<tspan x="' + l.x + '" dy="16" font-weight="400" style="fill:var(--muted)">' + l.pct + '</tspan></text>';
+  });
+  $('opPie').innerHTML = '<svg viewBox="0 0 520 350" role="img" aria-label="Stage distribution">' + g + '</svg>';
+}
+
+// Tabel On Process (6 baris per halaman). Baris riwayat disisipkan tepat di bawah lamaran yang dibuka.
+function renderOpTable(rows) {
+  const p = paginate(rows, OP_PAGE);
+  OP_PAGE = p.page;
+  $('opEmpty').style.display = rows.length ? 'none' : 'block';
+  $('opRows').innerHTML = p.view.map((a, i) => {
+    const open = OPEN.has(a.id);
+    return '<tr><td>' + (p.start + i + 1) + '</td>' +
+      '<td class="co"><button class="tg" aria-expanded="' + open + '" aria-label="Show status history" title="Status history" onclick="toggleJ(\'' + a.id + '\')">' + IC_CHEV + '</button>' + esc(a.company) + '</td>' +
+      '<td class="pos">' + esc(a.position) + '</td><td>' + esc(a.type) + '</td><td>' + esc(a.reff) + '</td><td>' + fmtDate(a.date) + '</td>' +
+      '<td>' + statusSelect(a) + '</td>' +
+      '<td>' + (a.ended ? '-' : a.inStage) + '</td><td>' + a.days + '</td></tr>' +
+      (open ? '<tr class="jr"><td class="jtd" colspan="9">' + journeyHTML(a) + '</td></tr>' : '');   // colspan = jumlah kolom tabel
+  }).join('');
+  updatePager(OP_PAGER, p, rows.length);
+  updateSortButton('opSortBtn', OP_SORT);
+}
+
+// Menggambar ulang seluruh halaman On Process Tracker
+function renderOP() {
+  const rows = collectProcessRows();                       // semua lamaran yang pernah masuk tahap on process
+  const act = rows.filter(a => OPS.includes(a.progress));  // yang statusnya masih on process
+
+  // Hitungan berbasis riwayat: berapa lamaran yang PERNAH mencapai tiap tahap (satu lamaran dihitung sekali per tahap)
+  const cnt = {};
+  OPS.forEach(s => { cnt[s] = 0; });
+  rows.forEach(a => { new Set(a.h.map(e => e.s)).forEach(s => { if (s in cnt) cnt[s]++; }); });
+  const entries = OPS.reduce((t, s) => t + cnt[s], 0);
+
+  renderOpSummary(rows, act);
+  renderPie(cnt, entries);
+  bars('opBars', OPS, cnt);
+  $('opBars').innerHTML += '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><b>Applications</b><span></span><i>' + rows.length + '</i></div>';
+  renderOpTable(rows);
+}
+
+
+/* === 9. START ================================================================ */
+if (READ_ONLY) document.body.classList.add('ro');   // aktifkan gaya hanya-lihat
+load();   // baris ini menjalankan semuanya saat halaman dibuka. Jangan dihapus.
+</script>
 </body>
 </html>
