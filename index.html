@@ -228,11 +228,11 @@ select.badge:hover:not(:disabled) { filter: brightness(.96); }   /* lebar dropdo
 .cap { color: var(--muted); font-size: 13px; margin: -8px 0 12px; }   /* keterangan kecil di bawah judul kartu */
 
 /* deretan kotak angka (Submitted 3 | Assessment 1 | ...) */
-.stages { display: grid; grid-template-columns: repeat(9, minmax(86px, 1fr)); gap: 0; overflow-x: auto; }
+.stages { display: grid; grid-template-columns: repeat(9, minmax(max-content, 1fr)); gap: 0; overflow-x: auto; }   /* kolom minimal selebar tulisannya */
 .stage { padding: 8px 10px 6px; border-left: 1px solid var(--line); min-width: 86px; }
 .stage:first-child { border-left: 0; padding-left: 0; }
 .stage b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }   /* angkanya */
-.stage span { font-size: 12px; font-weight: 400; color: var(--muted); }                                       /* nama tahapnya */
+.stage span { font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }                  /* nama tahapnya (selalu satu baris) */
 .stage:not(.zero) span { font-weight: 700; }     /* tulisan menebal bila angkanya 1 atau lebih */
 .stage.zero b { color: var(--line); }            /* angka 0 dibuat pudar */
 .stage .bar { height: 4px; border-radius: 2px; margin-top: 8px; background: var(--line); }   /* garis warna di bawah angka */
@@ -259,7 +259,8 @@ button.stage.mini[aria-pressed="true"] span { color: var(--ink); }
 .col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .col .pipe, .col .summary { margin-bottom: 0; }
 .col .pipe { flex: 1; display: flex; flex-direction: column; }
-.col .stages { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.col .stages { grid-template-columns: repeat(4, minmax(max-content, 1fr)); }
+.col .stage { min-width: 0; }
 .col #sumTop { grid-template-columns: 1fr; }
 .col .pipe #sumTop { margin-bottom: 12px; }
 .sumrow { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
@@ -290,8 +291,8 @@ button.stage.mini[aria-pressed="true"] span { color: var(--ink); }
 /* ---------------------------------------------------------------------
    7. TABEL  (tabel utama "mt" dan tabel On Process "op-t")
    --------------------------------------------------------------------- */
-.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; }
-.tablebox.fit { overflow: hidden; }   /* tabel utama: tanpa penggeser samping */
+.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.tscroll { overflow-x: auto; }       /* hanya tabelnya yang bisa digeser ke samping; pager dan pesan kosong tetap diam */
 
 table { border-collapse: collapse; width: 100%; min-width: 860px; }
 th { text-align: left; font-size: 13px; color: var(--ink); font-weight: 700; padding: 13px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: rgba(127, 127, 127, .07); }
@@ -312,13 +313,20 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
 
 /* tabel utama (class "mt"): lebar tiap kolom dalam persen, total = 100%
    urutan kolom: 1 No | 2 Company | 3 Position | 4 Type | 5 Portal | 6 Date | 7 Progress | 8 Notes | 9 ikon edit/hapus */
-.mt { table-layout: fixed; width: 100%; min-width: 0; }
-.mt th, .mt td { padding-left: 10px; padding-right: 10px; }
-.mt th:nth-child(1) { width: 4%; }    .mt th:nth-child(2) { width: 15%; }  .mt th:nth-child(3) { width: 19%; }
-.mt th:nth-child(4) { width: 8.5%; }  .mt th:nth-child(5) { width: 9.5%; } .mt th:nth-child(6) { width: 11%; }
-.mt th:nth-child(7) { width: 11%; }   .mt th:nth-child(8) { width: 15%; }  .mt th:nth-child(9) { width: 7%; }
-.mt th:nth-child(1), .mt td:nth-child(1) { padding-left: 6px; padding-right: 6px; }
-.mt th:nth-child(9), .mt td:nth-child(9) { padding-left: 4px; padding-right: 4px; }
+.ro .mt th:nth-child(9) { display: none; }   /* (mode hanya-lihat) kolom ikon edit/hapus disembunyikan */
+
+/* LAYAR LEBAR: tabel utama memakai lebar kolom dalam persen (total = 100%), tanpa penggeser samping.
+   urutan kolom: 1 No | 2 Company | 3 Position | 4 Type | 5 Portal | 6 Date | 7 Progress | 8 Notes | 9 ikon edit/hapus */
+@media (min-width: 861px) {
+  .mt { table-layout: fixed; width: 100%; min-width: 0; }
+  .mt th, .mt td { padding-left: 10px; padding-right: 10px; }
+  .mt th:nth-child(1) { width: 4%; }    .mt th:nth-child(2) { width: 15%; }  .mt th:nth-child(3) { width: 19%; }
+  .mt th:nth-child(4) { width: 8.5%; }  .mt th:nth-child(5) { width: 9.5%; } .mt th:nth-child(6) { width: 11%; }
+  .mt th:nth-child(7) { width: 11%; }   .mt th:nth-child(8) { width: 15%; }  .mt th:nth-child(9) { width: 7%; }
+  .mt th:nth-child(1), .mt td:nth-child(1) { padding-left: 6px; padding-right: 6px; }
+  .mt th:nth-child(9), .mt td:nth-child(9) { padding-left: 4px; padding-right: 4px; }
+  .ro .mt th:nth-child(8) { width: 22%; }   /* (mode hanya-lihat) lebar kolom ikon dibagikan ke kolom Notes */
+}
 .act { white-space: nowrap; }
 
 /* tabel On Process (class "op-t"): kolom 8-9 (Days in stage, Process in days) rata tengah */
@@ -384,8 +392,6 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
 .vo { display: none; }                                                              /* penanda "View only" disembunyikan di mode normal */
 .ro .vo { display: inline-block; border: 2px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .ro #addBtn { display: none; }                                                      /* tombol Add application */
-.ro .mt th:nth-child(9) { display: none; }                                          /* kolom ikon edit/hapus */
-.ro .mt th:nth-child(8) { width: 22%; }                                             /* lebar kolom ikon dibagikan ke kolom Notes */
 .ro-badge { min-width: 92px; text-align: center; padding: 4px 5px; font-size: 11.5px; cursor: default; }   /* status berupa label (bukan dropdown) */
 
 /* ---------------------------------------------------------------------
@@ -395,21 +401,24 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
   .grid, .grid2 { grid-template-columns: 1fr; }   /* kartu bertumpuk ke bawah */
   .two { grid-template-columns: 1fr; }
 
-  /* tabel utama berubah menjadi kartu per lamaran (judul kolom ditampilkan lewat data-label) */
-  .mt { table-layout: auto; }
-  .mt thead { display: none; }
-  .mt, .mt tbody, .mt tr, .mt td { display: block; width: 100%; }
-  .mt tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .mt tr:last-child { border-bottom: 0; }
-  .mt td { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 0; padding: 6px 14px; text-align: right; }
-  .mt td::before { content: attr(data-label); font-weight: 700; color: var(--muted); text-align: left; }
-  .mt td.act { justify-content: flex-end; }
-  .mt td.act::before { content: none; }
+  /* TABEL DI HP (tabel utama dan On Process sama): tabel digeser ke samping, kolomnya rapi.
+     Tulisan pendek (No, Type, Portal, Date, Progress, angka) selalu satu baris;
+     hanya Company, Position, dan Notes yang boleh turun baris, dengan lebar minimal agar enak dibaca. */
+  .cc th, .cc td { padding: 12px 14px; white-space: nowrap; overflow-wrap: break-word; }
+  .cc th:nth-child(1), .cc td:nth-child(1) { padding-left: 12px; padding-right: 8px; }   /* kolom No lebih rapat */
+  .cc td:nth-child(2), .cc td:nth-child(3), .mt td:nth-child(8) { white-space: normal; }
+  .cc th:nth-child(2), .cc th:nth-child(3), .mt th:nth-child(8) { min-width: 170px; }
+  .op-t td.co { position: relative; padding-left: 36px; }                              /* nama perusahaan yang turun baris tetap rata, panah di sisi kiri */
+  .op-t td.co .tg { position: absolute; left: 8px; top: 50%; margin: -11px 0 0; }
+  .op-t tr.jr td.jtd { white-space: normal; }
+  .jwrap { position: sticky; left: 18px; width: calc(100vw - 78px); }   /* riwayat tetap pas di lebar layar saat tabel digeser */
 }
 @media (max-width: 600px) {
   .summary.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* empat kartu jadi 2 x 2 */
   .k4 .sum:nth-child(odd) { border-left: 0; }
   .k4 .sum:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .col .stage { padding-left: 8px; padding-right: 8px; }               /* empat kotak kecil di Summary lebih rapat agar tulisannya satu baris */
+  .col .stage:first-child { padding-left: 0; }
 }
 
 /* Untuk pengguna yang mematikan animasi di perangkatnya */
@@ -486,7 +495,8 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
   </div>
 
   <!-- Tabel utama. Judul kolom ada di sini; baris-barisnya dibuat oleh renderTable() -->
-  <div class="tablebox fit">
+  <div class="tablebox">
+    <div class="tscroll">
     <table class="mt cc">
       <thead>
         <tr>
@@ -497,6 +507,7 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
       </thead>
       <tbody id="rows"></tbody>
     </table>
+    </div>
     <div class="empty" id="empty" style="display:none">No applications yet. Click “Add application” to get started.</div>
     <div class="pager" id="pager" style="display:none">
       <span class="pi" id="pgInfo"></span>
@@ -531,6 +542,7 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
 
   <!-- Tabel On Process. Baris riwayat (panah di samping nama perusahaan) dibuat oleh renderOpTable() -->
   <div class="tablebox">
+    <div class="tscroll">
     <table class="cc op-t">
       <thead>
         <tr>
@@ -541,6 +553,7 @@ td.nt  { color: var(--muted); max-width: 200px; }    /* kolom Notes berwarna abu
       </thead>
       <tbody id="opRows"></tbody>
     </table>
+    </div>
     <div class="empty" id="opEmpty" style="display:none">No applications have reached the Assessment to Presentation stages yet.</div>
     <div class="pager" id="opPager" style="display:none">
       <span class="pi" id="opPgInfo"></span>
@@ -913,16 +926,16 @@ function renderTable() {
   chip.style.display = GROUP ? 'inline-flex' : 'none';
   if (GROUP) chip.innerHTML = 'Showing: ' + esc(GROUPS[GROUP].label) + ' ' + IC_CLOSE;
 
-  // 4) Susun baris tabel. data-label dipakai di layar HP untuk menampilkan nama kolom.
+  // 4) Susun baris tabel
   $('rows').innerHTML = p.view.map((a, i) =>
-    '<tr><td data-label="No">' + (p.start + i + 1) + '</td>' +
-    '<td class="co" data-label="Company">' + esc(a.company) + '</td>' +
-    '<td class="pos" data-label="Position">' + esc(a.position) + '</td>' +
-    '<td data-label="Type">' + esc(a.type) + '</td>' +
-    '<td data-label="Portal">' + esc(a.reff) + '</td>' +
-    '<td data-label="Date">' + fmtDate(a.date) + '</td>' +
-    '<td data-label="Progress">' + statusSelect(a) + '</td>' +
-    '<td class="nt" data-label="Notes">' + esc(a.notes) + '</td>' +
+    '<tr><td>' + (p.start + i + 1) + '</td>' +
+    '<td class="co">' + esc(a.company) + '</td>' +
+    '<td class="pos">' + esc(a.position) + '</td>' +
+    '<td>' + esc(a.type) + '</td>' +
+    '<td>' + esc(a.reff) + '</td>' +
+    '<td>' + fmtDate(a.date) + '</td>' +
+    '<td>' + statusSelect(a) + '</td>' +
+    '<td class="nt">' + esc(a.notes) + '</td>' +
     (READ_ONLY ? '' : '<td class="act"><button class="ib" title="Edit" aria-label="Edit" onclick="openForm(\'' + a.id + '\')">' + IC_EDIT + '</button>' +
     '<button class="ib del" title="Delete" aria-label="Delete" onclick="remove(\'' + a.id + '\')">' + IC_DEL + '</button></td>') + '</tr>'
   ).join('');
@@ -1134,7 +1147,7 @@ function journeyHTML(a) {
     const due = toD(h[h.length - 1].d); due.setDate(due.getDate() + STALL);   // tanggal batas otomatis Not Proceed
     note = 'Moves to Not Proceed automatically on ' + fmtDate(ymd(due)) + ' (' + dayTxt(Math.max(0, a.left)) + ' left) if the status does not change.';
   }
-  return '<div class="jrow">' + steps + '</div>' + (note ? '<p class="jnote">' + note + '</p>' : '');
+  return '<div class="jwrap"><div class="jrow">' + steps + '</div>' + (note ? '<p class="jnote">' + note + '</p>' : '') + '</div>';
 }
 
 // Hanya satu riwayat yang boleh terbuka: membuka yang baru otomatis menutup yang lama
